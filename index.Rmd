@@ -1,0 +1,123 @@
+---
+title: "Assignment 1"
+output: html_document
+---
+
+```{r, echo=FALSE}
+library(dplyr)
+library(plotly)
+```
+
+```{r, echo=FALSE}
+#Reading in data
+deaths.data <- read.csv("~/Desktop/INFO498_HW/a1-health-burden-WarrenW159/data/deaths.csv")
+ylds.data <- read.csv("~/Desktop/INFO498_HW/a1-health-burden-WarrenW159/data/ylds.csv")
+le.data <- read.csv("~/Desktop/INFO498_HW/a1-health-burden-WarrenW159/data/life_expectancy.csv")
+#Creating new data set that combines life expectancy and deaths and sorts by age
+data.set <- full_join(le.data, deaths.data, by="age")
+#Set all NA values to 0
+data.set[is.na(data.set)] <- 0
+#Create new column called "ylls" that is the product of life expectancy and death values
+data.set <- mutate(data.set, ylls = life.expectancy * deaths)
+#Create new data set that combines life expectancy and ylds and sorts by age
+data.set2 <- full_join(le.data, ylds.data, by="age")
+#Set all NA values to 0
+data.set2[is.na(data.set2)] <- 0
+#Binds the last column of data.set2 and adds to end of data.set
+data.set <- mutate(data.set, ylds = data.set2[,5])
+#Calculates and adds dalys to end of data.set
+data.set <- mutate(data.set, dalys = ylls + ylds)
+
+```
+
+
+
+
+## Burden By Cause
+
+The greatest number of deaths in India are coming from Ischemic heart disease, with about _1.6 million_ people who have died from it according to the charts.  This shows that most likely very few people survived from it, which is why it has such a lower **YLD**.  The trend that is visible when noticing the different diseases in India, is that the diseases that kill more people have higher **YLL**s and higher **DALY**s, while having a lower **YLD**.  This can be due to the fact that harsher diseases don't give people much room to live, hench the low **YLD**. It therefore cuts of their life early and becomes a greater overall disease burden, which is why the **YLL** and **DALY** is so high.
+
+
+```{r, echo=FALSE}
+#Creates new data set and groups it by cause and shows the total of each health burden
+by.cause <- data.set %>% 
+            group_by(cause_name) %>% 
+            summarize(total.deaths = sum(deaths),
+                      total.ylls = sum(ylls),
+                      total.ylds = sum(ylds),
+                      total.dalys = sum(dalys)
+                      )
+plot_ly(data = by.cause, x = ~cause_name, y = ~total.deaths, type = "bar", name = 'total deaths') %>% 
+        add_trace(y = ~total.ylls, name = 'total ylls') %>% 
+        add_trace(y = ~total.ylds, name = 'total ylds') %>% 
+        add_trace(y = ~total.dalys, name = 'total dalys') %>% 
+        layout(yaxis = list(title = 'Count'))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Burden By Age
+
+It makes sense that children under _5_ and adults over _80_ will experience a lot more deaths. Their body's are weak and are therefore more susceptible to disease.  Children from _5-14_ have less deaths because they are strong enough to survive and most likely have the aid of parents to live on. From then on deaths increase due to irresponsibility as a young adult, and health begins to dwindle beyond that.  **YLL**'s are great in age groups where children are under _5_ because the most deaths happen then, even though they are supposed to live on much longer given that circumstances allow them to live on.  **YLL**'s become shorter in children from _5-14_ because there just aren't as many deaths around this age.  After that, years of life lost continues to dwindle because adults begin to approach their life-expectancy as they grow older. **YLD**s are low in children under _5_ and adults over _80_ because most of them die, and therefore aren't living with diseases.  It spikes again in adults over _20_ and begins to dwindle from there because a young adult is more prone to getting sick and living on with their illness verses an older adult who is more likely to just die when they get sick.  **DALY**s is higher in children under _5_ because since they are weak, they are the most likely of dying an early death and suffering from diseases.  This number again dwindles significantly in children ages _5-14_ since most of them survive and live healthily.  **DALY**s goes back up and decreases steadly as older adults health begin to deteriorate accordingly with age.
+
+
+
+```{r, echo=FALSE}
+#Creates new data set and groups it by age and shows the total of each health burden 
+by.age <- data.set %>% 
+          group_by(age) %>% 
+          summarize(total.deaths = sum(deaths),
+                    total.ylls = sum(ylls),
+                    total.ylds = sum(ylds),
+                    total.dalys = sum(dalys)
+                    )
+plot_ly(data = by.age, x = ~age, y = ~total.deaths, type = "bar", name = 'total deaths') %>% 
+        add_trace(y = ~total.ylls, name = 'total ylls') %>% 
+        add_trace(y = ~total.ylds, name = 'total ylds') %>% 
+        add_trace(y = ~total.dalys, name = 'total dalys') %>% 
+        layout(yaxis = list(title = 'Count'))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+## Burden By Sex
+
+Overall it seems as though male have higher death rates than do females.  This seems normal as studies have shown that on average women live longer than men.  This can be due to the fact that men engage in riskier activities than women do.  Total **deaths**, **YLL**s, and **DALY**s are higher in men than in women, however, total **YLD**s are slightly lower for men than for women.  This could be due to the fact that overall men have higher death rates, and not enough of them survive to live with disabilities, hence why their **YLD** value is lower than women.
+
+```{r, echo=FALSE}
+#Creates new data set and groups it by sex and shows the total of each health burden
+by.sex <- data.set %>% 
+          group_by(sex) %>% 
+          summarize(total.deaths = sum(deaths),
+                    total.ylls = sum(ylls),
+                    total.ylds = sum(ylds),
+                    total.dalys = sum(dalys)
+                    )
+plot_ly(data = by.sex, x = ~sex, y = ~total.deaths, type = "bar", name = 'total deaths') %>% 
+        add_trace(y = ~total.ylls, name = 'total ylls') %>% 
+        add_trace(y = ~total.ylds, name = 'total ylds') %>% 
+        add_trace(y = ~total.dalys, name = 'total dalys') %>% 
+        layout(yaxis = list(title = 'Count'))
+```
+
+
